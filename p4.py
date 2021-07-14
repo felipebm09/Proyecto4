@@ -723,16 +723,24 @@ def modulador_16QAM(bits, fc, mpp):
         j += 1
 
     # 5. Calcular la potencia promedio de la señal modulada
-    tau = 0.5
-
+    
     P_senal_Tx = (1 / (N*Tc)) * np.trapz(pow(senal_Tx, 2), t_simulacion)
+
+    # 6. Ergodicidad
+
+    print('Análisis de Ergodicidad')
+    tau = 0.5
     Promedio_Temporal = (1 / (N*Tc)) * np.trapz(senal_Tx, t_simulacion)
     Autocorrelacion_Temporal = (1 / (N*Tc)) * np.trapz(senal_Tx*(senal_Tx+tau), t_simulacion)
-    print('Promedio_Temporal')
-    print(Promedio_Temporal)
-    print('Autocorrelacion_Temporal')
-    print(Autocorrelacion_Temporal)
-   
+    Promedio_Estadistico = np.mean(senal_Tx)   # media teórica
+    Autocorrelacion_Estadistica = np.mean(Autocorrelacion_Temporal)
+
+    print('Promedio_Temporal: ', round(Promedio_Temporal, 2))
+    print('Promedio_Estadistico: ', round(Promedio_Estadistico, 2))
+    print('Autocorrelacion_Temporal: ', round(Autocorrelacion_Temporal, 2))
+    print('Autocorrelacion_Estadistica ', round(Autocorrelacion_Estadistica, 2))
+
+
     return senal_Tx, P_senal_Tx, portadora, moduladora
 
 import numpy as np
@@ -880,8 +888,7 @@ print('bits_Tx')
 print(len(bits_Tx))
 # 3. Modular la cadena de bits usando el esquema BPSK
 senal_Tx, Pm, portadora, moduladora = modulador_16QAM(bits_Tx, fc, mpp)
-print('señal tx')
-print(len(senal_Tx))
+print('Tamaño de señal a transmitir: ', len(senal_Tx))
 
 # 4. Se transmite la señal modulada, por un canal ruidoso
 senal_Rx = canal_ruidoso(senal_Tx, Pm, SNR)
@@ -889,8 +896,7 @@ senal_Rx = canal_ruidoso(senal_Tx, Pm, SNR)
 
 # 5. Se desmodula la señal recibida del canal
 bits_Rx, senal_demodulada = demodulador_16QAM(senal_Rx, portadora, mpp)
-print('bits rx')
-print(len(bits_Rx))
+print('Tamaño de señal recibida: ', len(bits_Rx))
 
 # 6. Se visualiza la imagen recibida 
 imagen_Rx = bits_a_rgb(bits_Rx, dimensiones)
@@ -939,40 +945,6 @@ ax4.plot(senal_demodulada[0:600], color='m', lw=2)
 ax4.set_ylabel('$b^{\prime}(t)$')
 ax4.set_xlabel('$t$ / milisegundos')
 fig.tight_layout()
-plt.show()
-
-# Tiempo para el análisis 
-t = np.linspace(0, 0.05 ,250)
-
-V = [1,-1]
-
-
-X_t = np.empty((4, len(t)))   
-
-plt.figure()
-
-for i in V:
-    P = i * np.cos(2*(np.pi)*fc*t) +  i * np.sin(2*(np.pi)*fc*t)
-    Q = -i * np.cos(2*(np.pi)*fc*t) +  i * np.sin(2*(np.pi)*fc*t) 
-    
-    X_t[i,:] = P
-    X_t[i+1,:] = Q
-    plt.plot(t, P, lw=2) 
-    plt.plot(t, Q, lw=2)       
-
-Mean = [np.mean(X_t[:,i]) for i in range(len(t))]
-
-plt.plot(t, Mean, lw=6, color='purple', label='Valor Esperado')
-
-
-Valor_esperado_senal = np.mean(senal_Tx)*t   # media teórica
-plt.plot(t, Valor_esperado_senal, '-.', lw=5, color='black', label='Valor esperado teórico')
-
-
-plt.title('Proceso aleatorio $X(t)$')
-plt.xlabel('$t$')
-plt.ylabel('$x_i(t)$')
-plt.legend()
 plt.show()
 
 from scipy import fft
